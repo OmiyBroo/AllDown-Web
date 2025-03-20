@@ -13,7 +13,11 @@ const io = socketIo(server, {
         methods: ["GET", "POST"]
     }
 });
-const ytDlp = new YTDlpWrap();
+
+// Initialize yt-dlp with custom path
+const ytDlp = new YTDlpWrap({
+    binaryPath: '/usr/local/bin/yt-dlp'
+});
 
 app.use(cors());
 app.use(express.json());
@@ -33,7 +37,14 @@ app.post('/api/video-info', async (req, res) => {
             throw new Error('URL is required');
         }
         
+        console.log('Fetching video info for URL:', url);
+        
         const info = await ytDlp.getVideoInfo(url);
+        console.log('Video info received:', info);
+        
+        if (!info || !info.formats) {
+            throw new Error('Failed to get video information');
+        }
         
         res.json({
             title: info.title,
@@ -42,7 +53,9 @@ app.post('/api/video-info', async (req, res) => {
         });
     } catch (error) {
         console.error('Error fetching video info:', error);
-        res.status(400).json({ error: error.message });
+        res.status(400).json({ 
+            error: error.message || 'Failed to fetch video information'
+        });
     }
 });
 
@@ -56,6 +69,8 @@ io.on('connection', (socket) => {
                 throw new Error('URL and quality are required');
             }
 
+            console.log('Starting download:', { url, format, quality });
+
             const options = {
                 format: quality,
                 output: path.join(downloadsDir, '%(title)s.%(ext)s'),
@@ -67,12 +82,14 @@ io.on('connection', (socket) => {
             const download = await ytDlp.exec(url, options);
 
             download.on('progress', (progress) => {
+                console.log('Download progress:', progress);
                 socket.emit('download-progress', {
                     progress: Math.round(progress.percent)
                 });
             });
 
             download.on('close', () => {
+                console.log('Download completed');
                 socket.emit('download-complete', {
                     downloadUrl: `/downloads/${download.filename}`,
                     filename: download.filename
