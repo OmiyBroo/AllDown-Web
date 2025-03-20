@@ -22,6 +22,14 @@ const ytDlp = new YTDlpWrap({
     binaryPath: '/usr/local/bin/yt-dlp'
 });
 
+// Common yt-dlp options
+const commonOptions = [
+    '--no-check-certificates',
+    '--no-warnings',
+    '--user-agent "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36"',
+    '--cookies-from-browser chrome'
+];
+
 app.use(cors());
 app.use(express.json());
 app.use(express.static('public'));
@@ -42,8 +50,11 @@ app.post('/api/video-info', async (req, res) => {
         
         console.log('Fetching video info for URL:', url);
         
-        // Use exec directly to get video info
-        const { stdout } = await execPromise(`yt-dlp -j "${url}"`);
+        // Use exec directly to get video info with additional options
+        const command = `yt-dlp -j ${commonOptions.join(' ')} "${url}"`;
+        console.log('Executing command:', command);
+        
+        const { stdout } = await execPromise(command);
         const info = JSON.parse(stdout);
         
         console.log('Video info received:', info);
@@ -82,7 +93,11 @@ io.on('connection', (socket) => {
                 output: path.join(downloadsDir, '%(title)s.%(ext)s'),
                 extractAudio: format === 'audio',
                 audioFormat: 'mp3',
-                progress: true
+                progress: true,
+                userAgent: 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
+                noCheckCertificate: true,
+                noWarnings: true,
+                cookiesFromBrowser: 'chrome'
             };
 
             const download = await ytDlp.exec(url, options);
