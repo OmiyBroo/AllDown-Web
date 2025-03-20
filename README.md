@@ -16,7 +16,6 @@ A modern video downloader website supporting multiple platforms including YouTub
 - Express
 - Socket.IO
 - yt-dlp
-- WebTorrent
 
 ## Deployment
 
