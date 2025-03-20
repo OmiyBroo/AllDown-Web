@@ -1,0 +1,67 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AllDown - Video Downloader</title>
+    <link rel="stylesheet" href="css/style.css">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+</head>
+<body>
+    <div class="theme-toggle">
+        <i class="fas fa-moon"></i>
+    </div>
+    
+    <div class="container">
+        <header>
+            <h1>AllDown</h1>
+            <p>Download videos from YouTube, Facebook, TikTok, and more</p>
+        </header>
+
+        <main>
+            <div class="url-input-container">
+                <input type="text" id="urlInput" placeholder="Paste video URL here...">
+                <button id="fetchBtn">Fetch Video</button>
+            </div>
+
+            <div class="video-info" id="videoInfo" style="display: none;">
+                <div class="thumbnail-container">
+                    <img id="thumbnail" src="" alt="Video thumbnail">
+                </div>
+                <div class="video-details">
+                    <h2 id="videoTitle"></h2>
+                    <div class="format-selection">
+                        <div class="format-type">
+                            <label>
+                                <input type="radio" name="format" value="video" checked>
+                                Video
+                            </label>
+                            <label>
+                                <input type="radio" name="format" value="audio">
+                                Audio Only
+                            </label>
+                        </div>
+                        <select id="qualitySelect">
+                            <option value="">Select Quality</option>
+                        </select>
+                    </div>
+                    <button id="downloadBtn" class="download-btn">
+                        <i class="fas fa-download"></i> Download
+                    </button>
+                </div>
+            </div>
+
+            <div class="progress-container" id="progressContainer" style="display: none;">
+                <div class="progress-bar">
+                    <div class="progress" id="progress"></div>
+                </div>
+                <p id="progressText">Downloading: 0%</p>
+            </div>
+        </main>
+    </div>
+
+    <script src="/socket.io/socket.io.js"></script>
+    <script src="js/main.js"></script>
+</body>
+</html> 

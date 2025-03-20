@@ -1,0 +1,80 @@
+const express = require('express');
+const http = require('http');
+const socketIo = require('socket.io');
+const cors = require('cors');
+const path = require('path');
+const YTDlpWrap = require('yt-dlp-wrap').default;
+const WebTorrent = require('webtorrent');
+
+const app = express();
+const server = http.createServer(app);
+const io = socketIo(server);
+const ytDlp = new YTDlpWrap();
+const client = new WebTorrent();
+
+app.use(cors());
+app.use(express.json());
+app.use(express.static('public'));
+
+// API endpoint to get video information
+app.post('/api/video-info', async (req, res) => {
+    try {
+        const { url } = req.body;
+        const info = await ytDlp.getVideoInfo(url);
+        
+        res.json({
+            title: info.title,
+            thumbnail: info.thumbnail,
+            formats: info.formats
+        });
+    } catch (error) {
+        res.status(400).json({ error: error.message });
+    }
+});
+
+// Socket.IO connection handling
+io.on('connection', (socket) => {
+    console.log('Client connected');
+
+    socket.on('start-download', async ({ url, format, quality }) => {
+        try {
+            const options = {
+                format: quality,
+                output: path.join(__dirname, 'downloads', '%(title)s.%(ext)s'),
+                extractAudio: format === 'audio',
+                audioFormat: 'mp3',
+                progress: true
+            };
+
+            const download = await ytDlp.exec(url, options);
+
+            download.on('progress', (progress) => {
+                socket.emit('download-progress', {
+                    progress: Math.round(progress.percent)
+                });
+            });
+
+            download.on('close', () => {
+                socket.emit('download-complete', {
+                    downloadUrl: `/downloads/${download.filename}`,
+                    filename: download.filename
+                });
+            });
+
+            download.on('error', (error) => {
+                socket.emit('download-error', { message: error.message });
+            });
+        } catch (error) {
+            socket.emit('download-error', { message: error.message });
+        }
+    });
+
+    socket.on('disconnect', () => {
+        console.log('Client disconnected');
+    });
+});
+
+const PORT = process.env.PORT || 3000;
+server.listen(PORT, () => {
+    console.log(`Server running on port ${PORT}`);
+}); 
