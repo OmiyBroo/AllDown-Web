@@ -4,6 +4,9 @@ const socketIo = require('socket.io');
 const cors = require('cors');
 const path = require('path');
 const YTDlpWrap = require('yt-dlp-wrap').default;
+const { exec } = require('child_process');
+const util = require('util');
+const execPromise = util.promisify(exec);
 
 const app = express();
 const server = http.createServer(app);
@@ -39,7 +42,10 @@ app.post('/api/video-info', async (req, res) => {
         
         console.log('Fetching video info for URL:', url);
         
-        const info = await ytDlp.getVideoInfo(url);
+        // Use exec directly to get video info
+        const { stdout } = await execPromise(`yt-dlp -j "${url}"`);
+        const info = JSON.parse(stdout);
+        
         console.log('Video info received:', info);
         
         if (!info || !info.formats) {
