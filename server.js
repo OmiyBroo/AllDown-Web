@@ -4,7 +4,6 @@ const socketIo = require('socket.io');
 const cors = require('cors');
 const path = require('path');
 const YTDlpWrap = require('yt-dlp-wrap').default;
-const WebTorrent = require('webtorrent');
 
 const app = express();
 const server = http.createServer(app);
@@ -15,7 +14,6 @@ const io = socketIo(server, {
     }
 });
 const ytDlp = new YTDlpWrap();
-const client = new WebTorrent();
 
 app.use(cors());
 app.use(express.json());
